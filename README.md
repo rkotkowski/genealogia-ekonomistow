@@ -4,8 +4,6 @@ Rejestr doktoratów polskich ekonomistów i relacji promotorskich (ok. 9,7 tys. 
 
 Strona: https://rkotkowski.github.io/genealogia-ekonomistow/
 
-Rejestr powstał na potrzeby artykułu: R. Kotkowski, *Genealogia akademicka ekonomistów polskich*, „Ekonomista” (w druku).
-
 ## Zawartość
 
 | plik | co to jest |
