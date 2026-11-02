@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Genealogia akademicka ekonomistów polskich</title>
+<meta name="description" content="Rejestr doktoratów polskich ekonomistów i relacji promotorskich: drzewa genealogiczne, graf, uprawnienia uczelni do nadawania stopni.">
+<meta name="author" content="Radosław Kotkowski">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cg fill='none' stroke='%232C4C9E' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M16 6v8M16 14L8 22M16 14l8 8M16 14v8'/%3E%3C/g%3E%3Cg fill='%232C4C9E'%3E%3Ccircle cx='16' cy='6' r='3.5'/%3E%3Ccircle cx='8' cy='24' r='3'/%3E%3Ccircle cx='16' cy='24' r='3'/%3E%3Ccircle cx='24' cy='24' r='3'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="stylesheet" href="fonts/fonts.css">
+<script src="vendor/d3.min.js"></script>
+<style>
+/* Układ: rejestr archiwalny — nagłówek z wyszukiwarką i nawigacją, pod nim jeden widok naraz
+   (osoba, uczelnia, graf, uprawnienia, zgłoszenie, dane osobowe). */
+:root{
+  --paper:#F3F5F8; --card:#FFFFFF; --ink:#17202C; --muted:#586374; --rule:#D3DAE3;
+  --accent:#2C4C9E; --accent-soft:#E3E9F7; --accent-mid:#B7C6EC; --old:#9A5B12; --old-soft:#F6EBDD;
+  --bad:#B4322A; --bad-soft:#F8E1DE; --ok:#2F7A4A; --ok-soft:#DFF0E4;
+  --c1:#2C4C9E; --c2:#C0622B; --c3:#2F8A6B; --c4:#8E4FA8; --c5:#B39012; --c0:#B9C1CC;
+  --display:"Spectral", Georgia, "Times New Roman", serif;
+  --body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --paper:#11151B; --card:#191F27; --ink:#E5E9EF; --muted:#9AA4B2; --rule:#2B333E;
+  --accent:#93AAF0; --accent-soft:#1F2A44; --accent-mid:#34477A; --old:#E3A55A; --old-soft:#3A2A16;
+  --bad:#F08A80; --bad-soft:#3E1F1C; --ok:#7FCB97; --ok-soft:#1C3324;
+  --c1:#8FA8F0; --c2:#EE9A62; --c3:#6CC9A4; --c4:#C79BE0; --c5:#E2C452; --c0:#4A5361; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --paper:#11151B; --card:#191F27; --ink:#E5E9EF; --muted:#9AA4B2; --rule:#2B333E;
+  --accent:#93AAF0; --accent-soft:#1F2A44; --accent-mid:#34477A; --old:#E3A55A; --old-soft:#3A2A16;
+  --bad:#F08A80; --bad-soft:#3E1F1C; --ok:#7FCB97; --ok-soft:#1C3324;
+  --c1:#8FA8F0; --c2:#EE9A62; --c3:#6CC9A4; --c4:#C79BE0; --c5:#E2C452; --c0:#4A5361; color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font:15px/1.5 var(--body);
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:24px 48px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:26px}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+h1,h2,h3{font-family:var(--display);font-weight:600;text-wrap:balance;margin:0;line-height:1.2}
+h1{font-size:clamp(1.7rem, 4vw, 2.4rem)}
+h2{font-size:1.35rem}
+h3{font-size:1.08rem}
+p{margin:0}
+.eyebrow{font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:500}
+
+header.top{display:flex;flex-direction:column;gap:14px;border-bottom:1px solid var(--rule);padding-bottom:18px}
+header.top h1 a{color:inherit}
+nav.tabs{display:flex;flex-wrap:wrap;gap:4px 18px;font-size:.92rem}
+nav.tabs a{color:var(--muted);padding:2px 0;border-bottom:2px solid transparent}
+nav.tabs a.on{color:var(--ink);border-bottom-color:var(--accent);text-decoration:none}
+.facts{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:.88rem;color:var(--muted)}
+.facts b{color:var(--ink);font-weight:600;font-family:var(--mono)}
+
+.search{position:relative;max-width:560px;width:100%}
+.search input{width:100%;font:inherit;font-size:1rem;padding:11px 14px;border:1px solid var(--rule);border-radius:6px;background:var(--card);color:var(--ink)}
+.results{position:absolute;z-index:5;left:0;right:0;top:calc(100% + 4px);background:var(--card);border:1px solid var(--rule);border-radius:6px;
+  box-shadow:0 8px 24px rgba(0,0,0,.12);max-height:60vh;overflow:auto}
+.results button{display:grid;grid-template-columns:1fr auto;gap:2px 12px;width:100%;text-align:left;font:inherit;background:none;border:0;
+  border-bottom:1px solid var(--rule);padding:8px 12px;color:var(--ink);cursor:pointer}
+.results button:last-child{border-bottom:0}
+.results button:hover,.results button.on{background:var(--accent-soft)}
+.results small{grid-column:1/-1;color:var(--muted);font-size:.8rem}
+
+.grid2{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:26px;align-items:start}
+@media (max-width:820px){.grid2{grid-template-columns:minmax(0,1fr)}}
+section{display:flex;flex-direction:column;gap:12px;min-width:0}
+.panel{background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:18px 18px 14px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:22px}
+
+.person{display:flex;flex-direction:column;gap:8px}
+.person .name{font-family:var(--display);font-size:clamp(1.6rem,3.6vw,2.2rem);font-weight:600;line-height:1.15}
+.person .thesis{font-family:var(--display);font-style:italic;font-size:1.08rem;max-width:68ch}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.9rem;color:var(--muted);align-items:baseline}
+.meta b{color:var(--ink);font-weight:500}
+.chip{display:inline-block;font-size:.72rem;letter-spacing:.04em;padding:2px 8px;border-radius:99px;background:var(--accent-soft);color:var(--accent);font-weight:500;white-space:nowrap}
+.chip.old{background:var(--old-soft);color:var(--old)}
+.chip.bad{background:var(--bad-soft);color:var(--bad)}
+.chip.ok{background:var(--ok-soft);color:var(--ok)}
+form.f .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+button.btnlink{font:inherit;font-size:.85rem;color:var(--accent);cursor:pointer}
+.btnlink{font-size:.85rem;border:1px solid var(--rule);border-radius:6px;padding:3px 10px;background:var(--card)}
+
+.line{list-style:none;margin:0;padding:0}
+.line li{position:relative;padding:0 0 16px 26px}
+.line li::before{content:"";position:absolute;left:6px;top:8px;bottom:-8px;width:2px;background:var(--rule)}
+.line li:last-child::before{display:none}
+.line li::after{content:"";position:absolute;left:1px;top:5px;width:12px;height:12px;border-radius:50%;background:var(--card);border:2px solid var(--accent)}
+.line li.pre1900::after{border-color:var(--old);background:var(--old-soft)}
+.line li.self::after{background:var(--accent)}
+.line li.gap::after{border-style:dashed;border-color:var(--muted)}
+.line .yr{font-family:var(--mono);font-size:.8rem;color:var(--muted);display:block}
+.line li.pre1900 .yr{color:var(--old)}
+.line .who{font-weight:500}
+.line .where{font-size:.82rem;color:var(--muted);display:block}
+
+.tree,.tree ul{list-style:none;margin:0;padding:0}
+.tree ul{padding-left:18px;border-left:1px solid var(--rule);margin-left:9px}
+.node{display:grid;grid-template-columns:22px 3.2em minmax(0,1fr) auto;gap:6px;align-items:baseline;padding:4px 0;border-bottom:1px dashed var(--rule)}
+.node .tog{width:20px;height:20px;border:1px solid var(--rule);border-radius:4px;background:var(--card);color:var(--muted);font:600 13px/1 var(--mono);cursor:pointer;padding:0;align-self:center}
+.node .tog[disabled]{visibility:hidden}
+.node .yr{font-family:var(--mono);font-size:.8rem;color:var(--muted)}
+.node .nm{min-width:0;overflow-wrap:anywhere}
+.node .nm small{color:var(--muted);font-size:.78rem;margin-left:6px}
+.node .cnt{font-family:var(--mono);font-size:.78rem;color:var(--muted);white-space:nowrap}
+.note{font-size:.82rem;color:var(--muted);max-width:80ch}
+
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th{font-weight:500;text-align:left;color:var(--muted);font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--rule);padding:6px 8px;vertical-align:bottom}
+td{border-bottom:1px solid var(--rule);padding:7px 8px;vertical-align:baseline}
+td.num,th.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.bar{height:6px;border-radius:3px;background:var(--accent);opacity:.75;margin-top:4px}
+.bar.old{background:var(--old)}
+.rank td:first-child{font-family:var(--mono);color:var(--muted);width:2.2em}
+
+/* graf */
+.gbar{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+.gbar select{font:inherit;padding:7px 10px;border:1px solid var(--rule);border-radius:6px;background:var(--card);color:var(--ink);max-width:100%}
+.gwrap{position:relative;border:1px solid var(--rule);border-radius:8px;background:var(--card);overflow:hidden}
+#gc{display:block;width:100%;height:min(72vh,780px);min-height:380px;cursor:grab;touch-action:none}
+.gtip{position:absolute;pointer-events:none;background:var(--ink);color:var(--paper);font-size:.8rem;padding:4px 8px;border-radius:4px;white-space:nowrap;transform:translate(10px,10px)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.82rem;color:var(--muted)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.legend .dash{display:inline-block;width:22px;border-top:2px dashed var(--muted);margin-right:5px;vertical-align:3px}
+.legend .solid{display:inline-block;width:22px;border-top:2px solid var(--muted);margin-right:5px;vertical-align:3px}
+
+/* uprawnienia */
+.uptbl td,.uptbl th{padding:5px 6px}
+.uptbl td.dec{text-align:center;font-family:var(--mono);font-size:.8rem;min-width:3.4em;border-left:2px solid var(--paper)}
+.dec.D{background:var(--accent-soft)}
+.dec.DH{background:var(--accent-mid)}
+.dec.H{background:var(--old-soft)}
+.dec.inf{background-image:repeating-linear-gradient(135deg,transparent 0 4px,rgba(127,127,127,.18) 4px 6px)}
+.dec.gap{color:var(--bad);font-weight:600}
+.uptbl .unit{min-width:14em;max-width:26em}
+.uptbl .unit small{display:block;color:var(--muted);font-size:.76rem}
+.sw{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:5px;border:1px solid var(--rule)}
+
+/* formularz i tekst */
+form.f{display:grid;gap:14px;max-width:680px}
+form.f label{display:flex;flex-direction:column;gap:5px;font-size:.88rem;font-weight:500}
+form.f input,form.f select,form.f textarea{font:inherit;font-weight:400;padding:9px 11px;border:1px solid var(--rule);border-radius:6px;background:var(--card);color:var(--ink);width:100%}
+form.f textarea{min-height:140px;resize:vertical}
+form.f .hint{font-weight:400;color:var(--muted);font-size:.8rem}
+button.primary{font:inherit;font-weight:500;padding:10px 18px;border-radius:6px;border:0;background:var(--accent);color:var(--paper);cursor:pointer;justify-self:start}
+button.primary[disabled]{opacity:.5;cursor:default}
+.msg{font-size:.9rem;padding:10px 12px;border-radius:6px}
+.msg.ok{background:var(--ok-soft);color:var(--ok)}
+.msg.bad{background:var(--bad-soft);color:var(--bad)}
+.prose{max-width:74ch;display:flex;flex-direction:column;gap:14px}
+.prose h2{margin-top:10px}
+.prose ul,.prose ol{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:6px}
+.draft{border:1px dashed var(--old);background:var(--old-soft);color:var(--ink);border-radius:8px;padding:12px 14px;font-size:.9rem}
+footer{border-top:1px solid var(--rule);padding-top:14px;font-size:.8rem;color:var(--muted)}
+.loading{padding:40px 0;color:var(--muted)}
+@media (prefers-reduced-motion:no-preference){.results{animation:f .12s ease-out}@keyframes f{from{opacity:.4;transform:translateY(-3px)}}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Rejestr doktoratów i relacji promotorskich</div>
+      <h1><a href="#">Genealogia akademicka ekonomistów polskich</a></h1>
+    </div>
+    <nav class="tabs" id="tabs">
+      <a href="#" data-t="home">Przeglądaj</a>
+      <a href="#graf" data-t="graf">Graf</a>
+      <a href="#uprawnienia" data-t="uprawnienia">Uprawnienia i pokrycie</a>
+      <a href="#zglos" data-t="zglos">Zgłoś uzupełnienie</a>
+      <a href="#dane-osobowe" data-t="dane-osobowe">Dane osobowe</a>
+    </nav>
+    <div class="search">
+      <input id="q" type="search" placeholder="Szukaj osoby, np. Taylor, Lipiński, Krzyżanowski…" autocomplete="off" aria-label="Szukaj osoby">
+      <div class="results" id="res" hidden></div>
+    </div>
+    <div class="facts" id="facts"></div>
+  </header>
+  <main id="view"><div class="loading">Wczytywanie rejestru…</div></main>
+  <footer id="foot"></footer>
+</div>
+
+<script>
+(async function(){
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const norm=s=>s.normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/ł/g,"l").replace(/Ł/g,"L").toLowerCase();
+const fmt=n=>n.toLocaleString("pl");
+let D,U;
+try{ [D,U]=await Promise.all([fetch("data.json").then(r=>r.json()),fetch("uprawnienia.json").then(r=>r.json())]); }
+catch(e){ $("#view").innerHTML='<p class="loading">Nie udało się wczytać danych. Odśwież stronę.</p>'; return; }
+
+// ---------- dane i pochodne ----------
+const N=D.id.length, idx=new Map(D.id.map((s,i)=>[s,i]));
+const P=D.p.map(s=>s?idx.get(s)??-1:-1), Q=D.q.map(s=>s?idx.get(s)??-1:-1);
+const kids=Array.from({length:N},()=>[]), kids2=Array.from({length:N},()=>[]);
+P.forEach((p,i)=>{ if(p>=0&&p!==i) kids[p].push(i); });
+Q.forEach((p,i)=>{ if(p>=0&&p!==i) kids2[p].push(i); });
+const byYear=(a,b)=>(D.y[a]??9999)-(D.y[b]??9999)||D.n[a].localeCompare(D.n[b],"pl");
+kids.forEach(k=>k.sort(byYear)); kids2.forEach(k=>k.sort(byYear));
+const short=i=>{ const m=D.id[i].split("-"); return m.length>2&&m[1]!=="XXX"?m.slice(1,-1).join("-"):""; };
+const uniName=i=>D.uczelnie[D.u[i]]||"";
+const desc=new Int32Array(N).fill(-1);
+(function(){ const state=new Uint8Array(N);
+  for(let r=0;r<N;r++){ if(state[r]) continue; const st=[[r,0]]; state[r]=1;
+    while(st.length){ const top=st[st.length-1], v=top[0], k=kids[v];
+      if(top[1]<k.length){ const c=k[top[1]++]; if(!state[c]){state[c]=1; st.push([c,0]);} }
+      else { let s=0; for(const c of k) if(desc[c]>=0) s+=1+desc[c]; desc[v]=s; state[v]=2; st.pop(); } } } })();
+function chain(i){ const out=[i], seen=new Set([i]); let p=P[i]; while(p>=0&&!seen.has(p)){ out.push(p); seen.add(p); p=P[p]; } return out; }
+const earliest=new Int32Array(N), root=new Int32Array(N);
+for(let i=0;i<N;i++){ const c=chain(i); let m=9999; for(const j of c) if(D.y[j]&&D.y[j]<m) m=D.y[j]; earliest[i]=m; root[i]=c[c.length-1]; }
+
+const withP=P.filter(p=>p>=0).length;
+let oldest=0; for(let i=0;i<N;i++) if(D.y[i]&&(!D.y[oldest]||D.y[i]<D.y[oldest])) oldest=i;
+const unisUsed=new Set(D.u.filter(u=>D.uczelnie[u])).size;
+$("#facts").innerHTML=`<span><b>${fmt(N)}</b> osób</span><span><b>${fmt(withP)}</b> relacji promotorskich</span>
+  <span><b>${unisUsed}</b> uczelni i instytutów</span><span>najstarszy doktorat: <b>${D.y[oldest]}</b> (<a href="#${D.id[oldest]}">${esc(D.n[oldest])}</a>)</span>`;
+$("#foot").innerHTML=`Źródło: <span class="mono">${esc(D.zrodlo)}</span>, eksport z ${esc(D.wygenerowano)}. Relacje według promotora głównego; promotorzy pomocniczy i drudzy promotorzy wymienieni osobno. Rok = rok nadania stopnia. Dane: CC BY 4.0, autor: Radosław Kotkowski. <a href="#dane-osobowe">Informacja o danych osobowych</a>.`;
+
+// ---------- wyszukiwarka ----------
+const keys=D.n.map(n=>norm(n)); let hits=[], sel=0;
+const q=$("#q"), res=$("#res");
+function showRes(){ res.hidden=!hits.length; res.innerHTML=hits.map((i,k)=>`<button data-i="${i}" class="${k===sel?"on":""}"><span>${esc(D.n[i])}</span><span class="mono muted">${D.y[i]??""}</span><small>${esc(uniName(i)||"uczelnia nieustalona")}${desc[i]?` · ${desc[i]} potomków`:""}</small></button>`).join(""); }
+q.addEventListener("input",()=>{ const t=norm(q.value.trim()); sel=0;
+  if(t.length<2){hits=[];showRes();return;}
+  const parts=t.split(/\s+/); hits=[];
+  for(let i=0;i<N;i++) if(parts.every(p=>keys[i].includes(p))) hits.push(i);
+  hits.sort((a,b)=>(keys[b].startsWith(parts[0])-keys[a].startsWith(parts[0]))||desc[b]-desc[a]); hits=hits.slice(0,12); showRes(); });
+q.addEventListener("keydown",e=>{ if(!hits.length) return;
+  if(e.key==="ArrowDown"){sel=Math.min(sel+1,hits.length-1);showRes();e.preventDefault();}
+  else if(e.key==="ArrowUp"){sel=Math.max(sel-1,0);showRes();e.preventDefault();}
+  else if(e.key==="Enter"){go(hits[sel]);} else if(e.key==="Escape"){hits=[];showRes();} });
+res.addEventListener("click",e=>{ const b=e.target.closest("button"); if(b) go(+b.dataset.i); });
+document.addEventListener("click",e=>{ if(!e.target.closest(".search")){hits=[];showRes();} });
+function go(i){ hits=[];showRes(); q.value=""; location.hash=D.id[i]; }
+const link=i=>`<a href="#${D.id[i]}">${esc(D.n[i])}</a>`;
+
+// ---------- drzewo potomków ----------
+function nodeHTML(i){ const k=kids[i].length;
+  return `<li><div class="node"><button class="tog" data-i="${i}" ${k?"":"disabled"} aria-expanded="false" aria-label="Rozwiń">+</button>
+  <span class="yr">${D.y[i]??"—"}</span><span class="nm">${link(i)}<small>${esc(short(i))}</small></span>
+  <span class="cnt">${desc[i]?desc[i]+" pot.":""}</span></div></li>`; }
+function treeHTML(list){ return `<ul class="tree">${list.map(nodeHTML).join("")}</ul>`; }
+document.addEventListener("click",e=>{ const b=e.target.closest(".tog"); if(!b) return;
+  const li=b.closest("li"), open=b.getAttribute("aria-expanded")==="true";
+  if(open){ li.querySelector(":scope>ul")?.remove(); b.textContent="+"; b.setAttribute("aria-expanded","false"); }
+  else { li.insertAdjacentHTML("beforeend",treeHTML(kids[+b.dataset.i]).replace('class="tree"',"")); b.textContent="−"; b.setAttribute("aria-expanded","true"); } });
+
+// ---------- widok: osoba ----------
+function personView(i){
+  const c=chain(i).reverse(), top=c[0];
+  const lineItems=(P[top]<0?`<li class="gap"><span class="yr">?</span><span class="muted">promotor nieustalony w rejestrze</span></li>`:"")+
+    c.map(j=>`<li class="${j===i?"self":""} ${D.y[j]&&D.y[j]<1900?"pre1900":""}"><span class="yr">${D.y[j]??"rok nieznany"}</span>
+      <span class="who">${j===i?esc(D.n[j]):link(j)}</span><span class="where">${esc(D.h[j]||uniName(j)||"uczelnia nieustalona")}</span></li>`).join("");
+  const gens=c.length-1, reach=earliest[i]<1900, second=kids2[i], promP2=Q[i];
+  return `<div class="stack">
+  <div class="person">
+    <div class="eyebrow">${esc(D.id[i])}</div>
+    <div class="name">${esc(D.n[i])}</div>
+    ${D.t[i]?`<div class="thesis">${esc(D.t[i])}</div>`:""}
+    <div class="meta">
+      <span>doktorat <b class="mono">${D.y[i]??"rok nieznany"}</b></span>
+      <span><b>${esc(uniName(i)||"uczelnia nieustalona")}</b>${D.h[i]?` (wówczas: ${esc(D.h[i])})`:""}</span>
+      ${D.hy[i]?`<span>habilitacja <b class="mono">${D.hy[i]}</b></span>`:""}
+      ${promP2>=0?`<span>promotor pomocniczy lub drugi: ${link(promP2)}</span>`:""}
+      ${D.w[i]?`<a href="${esc(D.w[i])}" target="_blank" rel="noopener">Wikipedia ↗</a>`:""}
+      ${D.l[i]?`<a href="${esc(D.l[i])}" target="_blank" rel="noopener">źródło ↗</a>`:""}
+    </div>
+    <div class="meta">${reach?`<span class="chip old">linia sięga ${earliest[i]} r.</span>`:""}
+      <span class="chip">${gens} ${gens===1?"pokolenie":gens>1&&gens<5?"pokolenia":"pokoleń"} wstecz</span>
+      ${desc[i]?`<span class="chip">${kids[i].length} wypromowanych · ${desc[i]} potomków</span>`:""}
+      <a class="btnlink" href="#graf-${D.id[i]}">Pokaż w grafie</a>
+      <a class="btnlink" href="#zglos-${D.id[i]}">Zgłoś poprawkę</a></div>
+  </div>
+  <div class="grid2">
+    <section class="panel"><h2>Linia promotorska</h2><ol class="line">${lineItems}</ol>
+      <p class="note">Od najstarszego znanego przodka do tej osoby, zawsze przez promotora głównego.</p></section>
+    <section class="panel"><h2>Wypromowani doktorzy</h2>
+      ${kids[i].length?treeHTML(kids[i])+`<p class="note">Przycisk + rozwija kolejne pokolenie. „pot.” = wszyscy potomkowie w rejestrze.</p>`:`<p class="muted">Brak wypromowanych doktorów w rejestrze.</p>`}
+      ${second.length?`<h3 style="margin-top:8px">Jako promotor pomocniczy lub drugi (${second.length})</h3>${treeHTML(second)}`:""}
+    </section>
+  </div></div>`;
+}
+
+// ---------- widok: start ----------
+function homeView(){
+  const roots=[]; for(let i=0;i<N;i++) if(P[i]<0&&desc[i]>0) roots.push(i);
+  roots.sort((a,b)=>desc[b]-desc[a]); const top=roots.slice(0,15), maxD=desc[top[0]];
+  const st=D.uczelnie.map(()=>({n:0,p:0,o:0}));
+  for(let i=0;i<N;i++){ const s=st[D.u[i]]; s.n++; if(P[i]>=0) s.p++; if(earliest[i]<1900) s.o++; }
+  const ul=D.uczelnie.map((u,k)=>({u,k,...st[k]})).filter(x=>x.u&&x.n>=20).sort((a,b)=>b.n-a.n), maxN=ul[0].n;
+  return `<div class="grid2">
+  <section class="panel"><div><div class="eyebrow">Protoplaści</div><h2>Korzenie z największą liczbą potomków</h2></div>
+    <div class="tbl"><table class="rank"><thead><tr><th>#</th><th>Osoba</th><th class="num">Rok</th><th class="num">Potomkowie</th></tr></thead><tbody>
+    ${top.map((i,k)=>`<tr><td>${k+1}</td><td>${link(i)}<div class="bar" style="width:${(100*desc[i]/maxD).toFixed(1)}%"></div></td><td class="num">${D.y[i]??"—"}</td><td class="num">${fmt(desc[i])}</td></tr>`).join("")}
+    </tbody></table></div>
+    <p class="note">Korzeń = osoba, której promotor nie jest ustalony w rejestrze. Potomkowie liczeni po promotorze głównym.</p></section>
+  <section class="panel"><div><div class="eyebrow">Uczelnie</div><h2>Doktoraty w rejestrze</h2></div>
+    <div class="tbl"><table><thead><tr><th>Uczelnia</th><th class="num">Doktoraty</th><th class="num">z promotorem</th><th class="num">linia do XIX w.</th></tr></thead><tbody>
+    ${ul.map(x=>`<tr><td><a href="#uczelnia-${x.k}">${esc(x.u)}</a><div class="bar" style="width:${(100*x.n/maxN).toFixed(1)}%"></div></td>
+      <td class="num">${fmt(x.n)}</td><td class="num">${Math.round(100*x.p/x.n)}%</td>
+      <td class="num">${Math.round(100*x.o/x.n)}%<div class="bar old" style="width:${Math.round(100*x.o/x.n)}%;margin-left:auto"></div></td></tr>`).join("")}
+    </tbody></table></div>
+    <p class="note">Uczelnie z co najmniej 20 doktoratami. „Linia do XIX w.”: łańcuch promotorów dochodzi do doktoratu sprzed 1900 r.</p></section>
+  </div>`;
+}
+
+// ---------- widok: uczelnia ----------
+function uniView(k){
+  const ids=[]; for(let i=0;i<N;i++) if(D.u[i]===k) ids.push(i);
+  const pc=new Map(), rc=new Map();
+  for(const i of ids){ if(P[i]>=0) pc.set(P[i],(pc.get(P[i])||0)+1); rc.set(root[i],(rc.get(root[i])||0)+1); }
+  const tp=[...pc].sort((a,b)=>b[1]-a[1]).slice(0,20), tr=[...rc].sort((a,b)=>b[1]-a[1]).slice(0,20);
+  const yy=ids.map(i=>D.y[i]).filter(Boolean);
+  const row=([i,c])=>`<tr><td>${link(i)}</td><td class="num">${D.y[i]??"—"}</td><td class="num">${c}</td></tr>`;
+  return `<div class="stack"><div class="person"><div class="eyebrow">Uczelnia</div><div class="name">${esc(D.uczelnie[k])}</div>
+    <div class="meta"><span><b class="mono">${fmt(ids.length)}</b> doktoratów</span>${yy.length?`<span>lata <b class="mono">${Math.min(...yy)}–${Math.max(...yy)}</b></span>`:""}
+    <a class="btnlink" href="#graf-u${k}">Pokaż graf uczelni</a></div></div>
+  <div class="grid2">
+  <section class="panel"><h2>Najczęstsi promotorzy</h2><div class="tbl"><table><thead><tr><th>Promotor</th><th class="num">Rok dr.</th><th class="num">Doktoraty tu</th></tr></thead><tbody>${tp.map(row).join("")}</tbody></table></div></section>
+  <section class="panel"><h2>Do kogo prowadzą linie</h2><div class="tbl"><table><thead><tr><th>Najstarszy znany przodek</th><th class="num">Rok dr.</th><th class="num">Doktoraty</th></tr></thead><tbody>${tr.map(row).join("")}</tbody></table></div>
+    <p class="note">Dla każdego doktoratu tej uczelni: ostatnia osoba w łańcuchu promotorów. Jeśli promotor doktoratu jest nieznany, przodkiem jest sam doktor.</p></section>
+  </div></div>`;
+}
+
+// ---------- widok: graf ----------
+let sim=null;
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+function graphSet(mode){
+  const S=new Set();
+  if(mode.uni!=null){ for(let i=0;i<N;i++) if(D.u[i]===mode.uni){ for(const j of chain(i)) S.add(j); if(Q[i]>=0) S.add(Q[i]); } }
+  else { const i=mode.person; for(const j of chain(i)) S.add(j); if(Q[i]>=0) S.add(Q[i]);
+    let fr=[i]; for(let d=0; d<3 && fr.length && S.size<900; d++){ const nx=[]; for(const v of fr) for(const c of kids[v].concat(kids2[v])) if(!S.has(c)){S.add(c); nx.push(c);} fr=nx; } }
+  return [...S];
+}
+function graphView(arg){
+  let mode;
+  if(arg&&arg.startsWith("u")&&D.uczelnie[+arg.slice(1)]) mode={uni:+arg.slice(1)};
+  else if(arg&&idx.has(arg)) mode={person:idx.get(arg)};
+  else mode={uni:D.uczelnie.indexOf("Uniwersytet Mikołaja Kopernika w Toruniu")};
+  const cnt=new Map(); D.u.forEach(u=>cnt.set(u,(cnt.get(u)||0)+1));
+  const opts=D.uczelnie.map((u,k)=>[u,k]).filter(([u,k])=>u&&cnt.get(k)>=5).sort((a,b)=>a[0].localeCompare(b[0],"pl"));
+  const title=mode.uni!=null?`Graf genealogii: ${esc(D.uczelnie[mode.uni])}`:`Graf: ${esc(D.n[mode.person])}`;
+  const html=`<div class="stack"><div class="person"><div class="eyebrow">Graf relacji promotorskich</div><h2>${title}</h2></div>
+    <div class="gbar"><label class="muted" for="gsel">Uczelnia</label>
+      <select id="gsel">${opts.map(([u,k])=>`<option value="${k}" ${mode.uni===k?"selected":""}>${esc(u)} (${cnt.get(k)})</option>`).join("")}${mode.person!=null?`<option value="" selected>— ${esc(D.n[mode.person])} —</option>`:""}</select>
+      ${mode.person!=null?`<a class="btnlink" href="#${D.id[mode.person]}">Wróć do osoby</a>`:""}<span class="muted" id="ginfo"></span></div>
+    <div class="gwrap"><canvas id="gc"></canvas><div class="gtip" id="gtip" hidden></div></div>
+    <div class="legend" id="glegend"></div>
+    <p class="note">${mode.uni!=null?"Wszystkie doktoraty tej uczelni w rejestrze wraz z pełnymi liniami promotorów, jak na rys. 2 w artykule.":"Linia przodków oraz trzy pokolenia potomków (do ok. 900 osób)."}
+    Kolor = uczelnia nadania stopnia; wielkość węzła = liczba wypromowanych w tym grafie. Linia ciągła: promotor główny, przerywana: pomocniczy lub drugi.
+    Kliknij węzeł, aby przejść do osoby; przeciągnij, aby przesunąć; kółko myszy lub gest szczypania przybliża.</p></div>`;
+  return {html, after:()=>drawGraph(mode)};
+}
+function drawGraph(mode){
+  $("#gsel").addEventListener("change",e=>{ if(e.target.value!=="") location.hash="graf-u"+e.target.value; });
+  if(typeof d3==="undefined"){ $("#ginfo").textContent="Nie udało się wczytać biblioteki do rysowania grafu."; return; }
+  const ids=graphSet(mode), inS=new Set(ids);
+  const deg=new Map(); ids.forEach(i=>deg.set(i,0));
+  const links=[];
+  for(const i of ids){ if(P[i]>=0&&inS.has(P[i])){ links.push({source:P[i],target:i,d:0}); deg.set(P[i],deg.get(P[i])+1); }
+    if(Q[i]>=0&&inS.has(Q[i])&&Q[i]!==P[i]) links.push({source:Q[i],target:i,d:1}); }
+  const uc=new Map(); ids.forEach(i=>uc.set(D.u[i],(uc.get(D.u[i])||0)+1));
+  const topU=[...uc].filter(([u])=>D.uczelnie[u]).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([u])=>u);
+  const pal=["--c1","--c2","--c3","--c4","--c5"].map(css), grey=css("--c0"), edge=css("--muted"), ring=css("--ink"), bg=css("--card");
+  const colorOf=i=>{ const k=topU.indexOf(D.u[i]); return k>=0?pal[k]:grey; };
+  const nodes=ids.map(i=>({id:i,r:2.6+Math.sqrt(deg.get(i))*1.9,c:colorOf(i)}));
+  $("#ginfo").textContent=`${fmt(nodes.length)} osób, ${fmt(links.length)} relacji`;
+  $("#glegend").innerHTML=topU.map((u,k)=>`<span><i style="background:${pal[k]}"></i>${esc(D.uczelnie[u])}</span>`).join("")+`<span><i style="background:${grey}"></i>pozostałe</span><span><span class="solid"></span>promotor</span><span><span class="dash"></span>pomocniczy / drugi</span>`;
+  const cv=$("#gc"), ctx=cv.getContext("2d"), dpr=window.devicePixelRatio||1;
+  let W=cv.clientWidth, H=cv.clientHeight; cv.width=W*dpr; cv.height=H*dpr;
+  let t=d3.zoomIdentity.translate(W/2,H/2).scale(nodes.length>1500?0.45:nodes.length>500?0.7:1);
+  const focus=mode.person;
+  function draw(){ ctx.save(); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+    ctx.translate(t.x,t.y); ctx.scale(t.k,t.k);
+    ctx.strokeStyle=edge; ctx.globalAlpha=.45; ctx.lineWidth=.7/Math.sqrt(t.k);
+    ctx.beginPath(); for(const l of links) if(!l.d){ ctx.moveTo(l.source.x,l.source.y); ctx.lineTo(l.target.x,l.target.y);} ctx.stroke();
+    ctx.setLineDash([4,3]); ctx.beginPath(); for(const l of links) if(l.d){ ctx.moveTo(l.source.x,l.source.y); ctx.lineTo(l.target.x,l.target.y);} ctx.stroke(); ctx.setLineDash([]);
+    ctx.globalAlpha=1;
+    for(const n of nodes){ ctx.beginPath(); ctx.arc(n.x,n.y,n.r,0,2*Math.PI); ctx.fillStyle=n.c; ctx.fill();
+      if(n.id===focus||P[n.id]<0&&desc[n.id]>0){ ctx.lineWidth=(n.id===focus?2.4:1)/Math.sqrt(t.k); ctx.strokeStyle=ring; ctx.stroke(); } }
+    if(t.k>1.6){ ctx.fillStyle=css("--ink"); ctx.font=`${11/t.k}px IBM Plex Sans, sans-serif`;
+      for(const n of nodes) if(n.r>4||t.k>3) ctx.fillText(D.n[n.id],n.x+n.r+1.5/t.k,n.y+3/t.k); }
+    ctx.restore(); }
+  if(sim) sim.stop();
+  sim=d3.forceSimulation(nodes)
+    .force("link",d3.forceLink(links).id(n=>n.id).distance(l=>l.d?26:16).strength(l=>l.d?.15:.8))
+    .force("charge",d3.forceManyBody().strength(-22).distanceMax(260))
+    .force("x",d3.forceX().strength(.035)).force("y",d3.forceY().strength(.035))
+    .force("collide",d3.forceCollide(n=>n.r+1))
+    .alphaDecay(nodes.length>1500?.045:.03).on("tick",draw);
+  const zoom=d3.zoom().scaleExtent([.15,8]).on("zoom",e=>{ t=e.transform; draw(); });
+  d3.select(cv).call(zoom).call(zoom.transform,t);
+  const tip=$("#gtip");
+  function pick(ev){ const [mx,my]=d3.pointer(ev,cv); const [x,y]=t.invert([mx,my]); return {n:sim.find(x,y,12/t.k),mx,my}; }
+  cv.addEventListener("mousemove",ev=>{ const {n,mx,my}=pick(ev); if(n){ tip.hidden=false; tip.style.left=mx+"px"; tip.style.top=my+"px";
+      tip.textContent=`${D.n[n.id]} · ${D.y[n.id]??"?"} · ${short(n.id)||"?"}`; cv.style.cursor="pointer"; } else { tip.hidden=true; cv.style.cursor="grab"; } });
+  cv.addEventListener("mouseleave",()=>{ tip.hidden=true; });
+  cv.addEventListener("click",ev=>{ const {n}=pick(ev); if(n) location.hash=D.id[n.id]; });
+  window.addEventListener("resize",()=>{ if(!document.body.contains(cv)) return; W=cv.clientWidth; H=cv.clientHeight; cv.width=W*dpr; cv.height=H*dpr; draw(); });
+}
+
+// ---------- widok: uprawnienia i pokrycie ----------
+const DEC=[1920,1930,1940,1950,1960,1970,1980,1990,2000,2010,2020];
+const RANK={"":0,"H":1,"D":2,"DH":3};
+function statusAt(u,y){
+  const L=U.lata_wykazow;
+  if(y<L[0]) return null;
+  if(y>=2019&&u.radon){ const od=+u.radon_od, dd=u.radon_do?+u.radon_do:9999; if(y>=od&&y<=dd) return {s:"D",inf:false}; }
+  let last=null; for(const ly of L) if(ly<=y) last=ly;
+  const s=u.wykazy[String(last)]||"";
+  return {s, inf:y>2010&&!!s};
+}
+function regIndex(name){ return name?D.uczelnie.indexOf(name):-1; }
+function uprawnieniaView(){
+  const regCount=new Map(); // uczelnia → dekada → liczba
+  for(let i=0;i<N;i++){ if(!D.y[i]) continue; const d=Math.floor(D.y[i]/10)*10; const m=regCount.get(D.u[i])||new Map(); m.set(d,(m.get(d)||0)+1); regCount.set(D.u[i],m); }
+  const rows=U.jednostki.map(u=>{
+    const k=regIndex(u.rejestr), m=regCount.get(k)||new Map();
+    const cells=DEC.map(d=>{ let best={s:"",inf:true}, any=false;
+      for(let y=d;y<d+10&&y<=2026;y++){ const st=statusAt(u,y); if(!st||!st.s) continue; any=true;
+        if(RANK[st.s]>RANK[best.s]||(RANK[st.s]===RANK[best.s]&&!st.inf)) best=st; }
+      return {d, s:any?best.s:"", inf:any&&best.inf, n:m.get(d)||0}; });
+    const tot=[...m.values()].reduce((a,b)=>a+b,0);
+    const rightDec=cells.filter(c=>c.s.includes("D")&&!c.inf), gapDec=rightDec.filter(c=>!c.n);
+    const first=cells.find(c=>c.s.includes("D"))?.d ?? 9999;
+    const status=!rightDec.length&&!cells.some(c=>c.s.includes("D"))?"none":!tot?"empty":gapDec.length?"gaps":"ok";
+    return {u,k,cells,tot,gapDec,first,status};
+  }).filter(r=>r.status!=="none"||r.tot);
+  rows.sort((a,b)=>a.first-b.first||b.tot-a.tot);
+  const nEmpty=rows.filter(r=>r.status==="empty").length, nGaps=rows.filter(r=>r.status==="gaps").length, nOk=rows.filter(r=>r.status==="ok").length;
+  const chip=r=>r.status==="empty"?`<span class="chip bad">brak w rejestrze</span>`:r.status==="gaps"?`<span class="chip bad">luki: ${r.gapDec.map(c=>c.d+"s").join(", ").replace(/s/g,"")}</span>`:r.status==="ok"?`<span class="chip ok">są w każdej dekadzie</span>`:`<span class="chip">bez uprawnień w wykazach</span>`;
+  return `<div class="stack">
+  <div class="person"><div class="eyebrow">Indeks uprawnień</div><h2>Gdzie i kiedy powinny być doktoraty z ekonomii, a co mamy w rejestrze</h2>
+    <p class="note">Wiersz = uczelnia lub instytut, który według wykazów w Monitorze Polskim (1952–2010) albo RAD-on (od 2019 r.) miał prawo nadawać stopień doktora w naukach ekonomicznych. Komórka = dekada: tło pokazuje uprawnienia, liczba to doktoraty tej jednostki w rejestrze.</p></div>
+  <div class="meta"><span class="chip ok">${nOk} jednostek: doktoraty w każdej dekadzie z uprawnieniami</span><span class="chip bad">${nGaps} z lukami</span><span class="chip bad">${nEmpty} bez żadnego doktoratu w rejestrze</span></div>
+  <div class="legend"><span><span class="sw" style="background:var(--accent-mid)"></span>doktorat i habilitacja</span><span><span class="sw" style="background:var(--accent-soft)"></span>tylko doktorat</span>
+    <span><span class="sw dec inf" style="background-color:var(--accent-soft)"></span>2011–2018: przeniesione z wykazu 2010 (brak wykazów)</span><span><b style="color:var(--bad)">0</b> = uprawnienia są, doktoratów w rejestrze brak</span></div>
+  <div class="panel" style="padding:8px 4px"><div class="tbl"><table class="uptbl"><thead><tr><th class="unit">Jednostka</th>${DEC.map(d=>`<th class="num">${d}–</th>`).join("")}<th class="num">Razem</th><th>Pokrycie</th></tr></thead><tbody>
+  ${rows.map(r=>`<tr><td class="unit">${r.k>=0?`<a href="#uczelnia-${r.k}">${esc(r.u.nazwa)}</a>`:esc(r.u.nazwa)}<small>${r.u.pierwszy_dr?`doktoraty od ${r.u.pierwszy_dr.slice(0,4)}`:r.u.radon_od?`rada dyscypliny od ${r.u.radon_od}`:""}${r.u.radon?"":" · brak w eksporcie RAD-on"}</small></td>
+    ${r.cells.map(c=>`<td class="dec ${c.s} ${c.inf?"inf":""} ${c.s.includes("D")&&!c.inf&&!c.n?"gap":""}" title="${c.d}–${c.d+9}: ${c.s?("uprawnienia "+c.s+(c.inf?" (przeniesione)":"")):"brak uprawnień w wykazach"}; w rejestrze ${c.n}">${c.n||(c.s.includes("D")?"0":"")}</td>`).join("")}
+    <td class="num">${fmt(r.tot)}</td><td>${chip(r)}</td></tr>`).join("")}
+  </tbody></table></div></div>
+  <div class="prose note">
+    <p><b>Jak czytać.</b> „Doktorat” do 1958 r. to stopień kandydata nauk, a „habilitacja” do 1958 r. to doktor nauk; w latach 1958–1968 habilitację zastępowała docentura. Status w danym roku = ostatni wykaz z tego roku lub wcześniejszy; od 2019 r. obowiązują rady dyscyplin z RAD-on.</p>
+    <p><b>Ograniczenia.</b> Zmiany wykazów z lat 1984–1990 przeczytane tylko wybiórczo; brak wykazów 1991–1995 i 2011–2018; eksport RAD-on nie obejmuje części jednostek (np. instytutów PAN i UMCS), więc dla nich lata po 2010 r. są przeniesione z wykazu 2010. Okres przedwojenny (wydziały prawa, SGH od 1924 r., Poznań od 1923 r.) nie jest jeszcze w tabeli. Doktoraty sprzed uprawnień ekonomicznych w rejestrze to zwykle doktoraty z prawa lub filozofii.</p>
+    <p>Źródło: <span class="mono">uprawnienia_ekonomia.xlsx</span> (akty w Monitorze Polskim) i <span class="mono">${esc(U.zrodlo_radon)}</span>.</p>
+  </div></div>`;
+}
+
+// ---------- widok: zgłoszenie ----------
+// Strona statyczna (GitHub Pages): zgłoszenie składa się w wiadomość e-mail do autora.
+// Jeśli FORM_ENDPOINT jest ustawiony (np. Formspree), formularz wysyła je tam bezpośrednio.
+const KONTAKT="kotkowski@inepan.waw.pl";
+const FORM_ENDPOINT="";
+function zglosView(arg){
+  const i=arg&&idx.has(arg)?idx.get(arg):-1;
+  const html=`<div class="stack"><div class="person"><div class="eyebrow">Zgłoszenie</div><h2>Zgłoś brak, błąd albo jego rozwiązanie</h2>
+    <p class="note">Brakuje doktoratu, promotora, roku albo coś jest pomylone? Opisz to i, jeśli możesz, podaj źródło. ${FORM_ENDPOINT?"Zgłoszenie trafia tylko do autora rejestru.":`Formularz przygotuje wiadomość e-mail do autora rejestru (<a href="mailto:${esc(KONTAKT)}">${esc(KONTAKT)}</a>); wyślesz ją ze swojej poczty.`}</p></div>
+  <form class="f" id="zf">
+    <label for="zr">Czego dotyczy
+      <select id="zr"><option>Brakujący doktorat</option><option>Brakujący lub błędny promotor</option><option>Błąd w danych (rok, uczelnia, tytuł, nazwisko)</option><option>Ta sama osoba wpisana dwa razy</option><option>Rozwiązanie zagadki (np. promotor protoplasty)</option><option>Sprzeciw lub prośba dotycząca moich danych</option><option>Inne</option></select></label>
+    <label for="zo">Osoba w rejestrze <span class="hint">nazwisko i imię lub identyfikator; zostaw puste przy nowej osobie</span>
+      <input id="zo" value="${i>=0?esc(D.n[i]+" ("+D.id[i]+")"):""}"></label>
+    <label for="zd">Opis <span class="hint">co jest nie tak i jak powinno być</span>
+      <textarea id="zd" required></textarea></label>
+    <label for="zs">Źródło <span class="hint">link, publikacja, BIP, archiwum</span>
+      <input id="zs"></label>
+    <label for="zp">Podpis <span class="hint">nieobowiązkowo; przyda się, jeśli mamy podziękować w publikacji</span>
+      <input id="zp"></label>
+    <div class="row">
+      <button class="primary" id="zb" type="submit">${FORM_ENDPOINT?"Wyślij zgłoszenie":"Otwórz w programie pocztowym"}</button>
+      ${FORM_ENDPOINT?"":`<button class="btnlink" id="zc" type="button">Kopiuj treść</button>`}
+    </div>
+    <div id="zm" aria-live="polite"></div>
+  </form>
+  <p class="note">${FORM_ENDPOINT?"Zgłoszenie (treść i podpis, jeśli go podasz) trafia do skrzynki autora rejestru.":"Strona niczego nie zapisuje: treść zgłoszenia trafia do autora tylko wtedy, gdy wyślesz wiadomość."} Więcej: <a href="#dane-osobowe">dane osobowe</a>.</p></div>`;
+  return {html, after:setupForm};
+}
+function setupForm(){
+  const msg=(t,c)=>{ $("#zm").innerHTML=t?`<div class="msg ${c}">${t}</div>`:""; };
+  const read=()=>({rodzaj:$("#zr").value,osoba:$("#zo").value.trim().slice(0,300),opis:$("#zd").value.trim().slice(0,4000),
+    zrodlo:$("#zs").value.trim().slice(0,1000),podpis:$("#zp").value.trim().slice(0,200)});
+  const subject=z=>`[Genealogia ekonomistów] ${z.rodzaj}${z.osoba?": "+z.osoba:""}`.slice(0,180);
+  const body=z=>`Rodzaj: ${z.rodzaj}\nOsoba w rejestrze: ${z.osoba||"(nowa osoba)"}\n\nOpis:\n${z.opis}\n\nŹródło: ${z.zrodlo||"(brak)"}\nPodpis: ${z.podpis||"(brak)"}\n\nWersja rejestru: ${D.zrodlo}`;
+  $("#zc")?.addEventListener("click",async()=>{ const z=read(); if(!z.opis){ msg("Wpisz opis zgłoszenia.","bad"); return; }
+    try{ await navigator.clipboard.writeText(`Do: ${KONTAKT}\nTemat: ${subject(z)}\n\n${body(z)}`); msg(`Skopiowano. Wklej do wiadomości na adres <b>${esc(KONTAKT)}</b>.`,"ok"); }
+    catch(e){ msg("Nie udało się skopiować. Zaznacz tekst ręcznie.","bad"); } });
+  $("#zf").addEventListener("submit",async e=>{ e.preventDefault(); const z=read();
+    if(!z.opis){ msg("Wpisz opis zgłoszenia.","bad"); return; }
+    if(!FORM_ENDPOINT){
+      location.href=`mailto:${KONTAKT}?subject=${encodeURIComponent(subject(z))}&body=${encodeURIComponent(body(z))}`;
+      msg(`Jeśli program pocztowy się nie otworzył, użyj „Kopiuj treść” i wyślij wiadomość na adres <b>${esc(KONTAKT)}</b>.`,"");
+      return; }
+    $("#zb").disabled=true; msg("Wysyłanie…","");
+    try{ const r=await fetch(FORM_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},
+        body:JSON.stringify({_subject:subject(z),...z,wersja:D.zrodlo})});
+      if(!r.ok) throw new Error(r.status); msg("Dziękujemy. Zgłoszenie wysłane.","ok"); $("#zd").value=""; $("#zs").value=""; }
+    catch(err){ msg(`Nie udało się wysłać. Napisz bezpośrednio: <a href="mailto:${esc(KONTAKT)}">${esc(KONTAKT)}</a>.`,"bad"); }
+    finally{ $("#zb").disabled=false; } });
+}
+
+// ---------- widok: dane osobowe ----------
+function rodoView(){ return `<div class="prose">
+  <div class="eyebrow">Informacja o przetwarzaniu danych osobowych</div>
+  <h2>Dane osobowe w rejestrze genealogii akademickiej</h2>
+  <p class="muted">Informacja na podstawie art. 14 RODO (rozporządzenie Parlamentu Europejskiego i Rady (UE) 2016/679). Stan na ${esc(D.wygenerowano)}.</p>
+  <h3>W skrócie</h3>
+  <ul>
+    <li>Rejestr jest częścią badania naukowego z historii nauki, opublikowanego w „Ekonomiście”. RODO dopuszcza przetwarzanie danych do celów badań naukowych i historycznych, przy odpowiednich zabezpieczeniach (art. 89).</li>
+    <li>Rejestr zawiera wyłącznie informacje o pracy naukowej, które uczelnie i organy państwa same podają do publicznej wiadomości: kto, kiedy i gdzie uzyskał stopień doktora, pod czyim kierunkiem i z jaką rozprawą.</li>
+    <li>Nie zawiera dat ani miejsc urodzenia, adresów, danych kontaktowych, ocen ani danych szczególnych kategorii (art. 9 RODO).</li>
+    <li>Duża część osób w rejestrze nie żyje; RODO nie dotyczy danych osób zmarłych (motyw 27).</li>
+    <li>Każdy może zażądać sprostowania, zgłosić sprzeciw albo poprosić o wyjaśnienie: <a href="mailto:${esc(KONTAKT)}">${esc(KONTAKT)}</a> lub <a href="#zglos">formularz</a>.</li>
+  </ul>
+  <h3>Administrator danych</h3>
+  <p>Administratorem danych jest dr Radosław Kotkowski, autor badania, który sam zebrał dane i prowadzi rejestr. Kontakt: <a href="mailto:${esc(KONTAKT)}">${esc(KONTAKT)}</a>. Administrator nie wyznaczył inspektora ochrony danych, ponieważ nie ma takiego obowiązku (art. 37 RODO).</p>
+  <h3>Jakie dane i skąd</h3>
+  <p>Imię i nazwisko (także wcześniejsze), rok nadania stopnia doktora, uczelnia i wydział, tytuł rozprawy, promotor i promotor pomocniczy, w części przypadków rok habilitacji, link do publicznego źródła lub hasła w Wikipedii.</p>
+  <p>Źródła są wyłącznie publiczne: wykazy nadanych stopni w Biuletynach Informacji Publicznej i na stronach uczelni, system RAD-on, repozytoria i katalogi bibliotek, kroniki i księgi pamiątkowe uczelni, „Ruch Prawniczy, Ekonomiczny i Socjologiczny”, Monitor Polski oraz opracowania historyczne. Dane nie pochodzą od osób, których dotyczą.</p>
+  <h3>Cel i podstawa prawna</h3>
+  <p>Cel: badanie relacji mistrz–uczeń wśród polskich ekonomistów, publikacja jego wyników i udostępnienie rejestru innym badaczom. Podstawa: art. 6 ust. 1 lit. f RODO, czyli prawnie uzasadniony interes administratora w prowadzeniu badań naukowych i upowszechnianiu ich wyników. Interes ten nie przeważa nad prawami osób w rejestrze, bo chodzi o informacje z przebiegu kariery naukowej, które same w sobie są jawne i których upublicznienie jest elementem nadania stopnia.</p>
+  <h3>Dlaczego nie powiadamiamy każdej osoby osobno</h3>
+  <p>Rejestr obejmuje kilka tysięcy osób, w większości bez dostępnych danych kontaktowych. Art. 14 ust. 5 lit. b RODO zwalnia z indywidualnego obowiązku informacyjnego, gdy wymagałoby to niewspółmiernie dużego wysiłku przy badaniach naukowych lub historycznych. W zamian administrator podaje tę informację publicznie, na tej stronie.</p>
+  <h3>Zabezpieczenia (art. 89 ust. 1 RODO)</h3>
+  <ul>
+    <li>Minimalizacja: tylko dane o przebiegu kariery naukowej; z kronik i ksiąg nie przepisujemy dat urodzenia ani życiorysów, a robocze uwagi z rejestru nie są publikowane.</li>
+    <li>Brak profilowania i ocen: rejestr opisuje relacje promotorskie, nie ocenia osób.</li>
+    <li>Każdy wpis ma wskazane źródło, a błędy poprawiamy po zgłoszeniu.</li>
+  </ul>
+  <h3>Prawa osób, których dane dotyczą</h3>
+  <p>Prawo dostępu (art. 15), sprostowania (art. 16), ograniczenia przetwarzania (art. 18) i sprzeciwu (art. 21; przy badaniach naukowych art. 21 ust. 6). Prawo do usunięcia danych (art. 17) jest ograniczone, gdy usunięcie uniemożliwiłoby lub poważnie utrudniło realizację celów badania (art. 17 ust. 3 lit. d). Przysługuje też skarga do Prezesa Urzędu Ochrony Danych Osobowych (ul. Stawki 2, 00-193 Warszawa). Prośby najlepiej kierować e-mailem na adres <a href="mailto:${esc(KONTAKT)}">${esc(KONTAKT)}</a> lub przez <a href="#zglos">formularz</a> (rodzaj: „Sprzeciw lub prośba dotycząca moich danych”).</p>
+  <h3>Odbiorcy i przechowywanie</h3>
+  <p>Rejestr jest publicznie dostępny na tej stronie i do pobrania jako plik danych. Strona jest hostowana w serwisie GitHub Pages (GitHub, Inc.), który przy każdym wejściu rejestruje w logach serwera adres IP odwiedzającego, zgodnie z własną polityką prywatności. Sama strona nie używa plików cookie, analityki ani zewnętrznych czcionek i skryptów: wszystko wczytuje się z tego samego serwera. Rejestr jest przechowywany bezterminowo jako zbiór o charakterze historycznym, co RODO dopuszcza przy badaniach naukowych i historycznych (art. 5 ust. 1 lit. e).</p>
+  <h3>Zgłoszenia</h3>
+  <p>Formularz niczego nie zapisuje na stronie: przygotowuje wiadomość e-mail, którą wysyłasz ze swojej skrzynki do administratora. Administrator przechowuje ją w poczcie tak długo, jak to potrzebne do sprawdzenia i wprowadzenia poprawki. Podstawa: art. 6 ust. 1 lit. f RODO (obsługa zgłoszeń i poprawianie rejestru).</p>
+  <h3>Licencja</h3>
+  <p>Rejestr został zebrany przez autora ze źródeł publicznych i jest udostępniony na licencji <a href="https://creativecommons.org/licenses/by/4.0/deed.pl" target="_blank" rel="noopener">Creative Commons Uznanie autorstwa 4.0 (CC BY 4.0)</a>: można go wykorzystywać i przetwarzać, także komercyjnie, pod warunkiem wskazania autora i źródła (artykułu w „Ekonomiście” i tej strony).</p>
+  </div>`; }
+
+// ---------- routing ----------
+function setTab(t){ document.querySelectorAll("#tabs a").forEach(a=>a.classList.toggle("on",a.dataset.t===t)); }
+function route(){ const h=decodeURIComponent(location.hash.slice(1));
+  if(sim&&!h.startsWith("graf")){ sim.stop(); sim=null; }
+  let out, tab="home";
+  if(h.startsWith("uczelnia-")&&D.uczelnie[+h.slice(9)]) out=uniView(+h.slice(9));
+  else if(h==="graf"||h.startsWith("graf-")){ out=graphView(h.slice(5)); tab="graf"; }
+  else if(h==="uprawnienia"){ out=uprawnieniaView(); tab="uprawnienia"; }
+  else if(h==="zglos"||h.startsWith("zglos-")){ out=zglosView(h.slice(6)); tab="zglos"; }
+  else if(h==="dane-osobowe"){ out=rodoView(); tab="dane-osobowe"; }
+  else if(idx.has(h)) out=personView(idx.get(h));
+  else out=homeView();
+  if(typeof out==="string") out={html:out};
+  $("#view").innerHTML=out.html; setTab(tab); if(out.after) out.after(); if(h) window.scrollTo(0,0); }
+addEventListener("hashchange",route); route();
+})();
+</script>
+</body>
+</html>
