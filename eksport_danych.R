@@ -9,7 +9,7 @@ stopifnot(!anyDuplicated(d$doktorant_id_double))
 yr <- function(x) as.integer(sub("^\\D*(\\d{4}).*$", "\\1", ifelse(grepl("\\d{4}", x), x, NA)))
 slug <- function(x) chartr("ŻŚŁÓĄĘŃĆŹ_", "ZSLOAENCZ-", x)
 stopifnot(!anyDuplicated(slug(d$doktorant_id_double)))
-uni <- d$uczelnia_aktualna_nazwa; uni[is.na(uni)] <- ""
+uni <- d$uczelnia_aktualna_nazwa; uni[is.na(uni) | uni == "NA"] <- ""  # w rejestrze bywa dosłowny tekst „NA”
 unis <- names(sort(table(uni), decreasing = TRUE))
 hist <- ifelse(!is.na(d$uczelnia_nazwa_podczas_nadania) & d$uczelnia_nazwa_podczas_nadania != uni,
                d$uczelnia_nazwa_podczas_nadania, "")
@@ -28,7 +28,8 @@ out <- list(
   q = nz(slug(d$promotor_pomocniczy_id)),
   w = nz(d$wiki_doktoranta),
   l = link,
-  hy = yr(d$habilitacja_rok)
+  hy = yr(d$habilitacja_rok),
+  o = ifelse(!is.na(d$ORCID) & grepl("^[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{3}[0-9X]$", d$ORCID), d$ORCID, "")
 )
 write_json(out, "data.json", auto_unbox = TRUE, na = "null")
 cat("osób:", length(out$id), " plik:", round(file.size("data.json")/1e6, 2), "MB\n")

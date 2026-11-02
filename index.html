@@ -269,6 +269,7 @@ function personView(i){
       ${D.hy[i]?`<span>habilitacja <b class="mono">${D.hy[i]}</b></span>`:""}
       ${promP2>=0?`<span>promotor pomocniczy lub drugi: ${link(promP2)}</span>`:""}
       ${D.w[i]?`<a href="${esc(D.w[i])}" target="_blank" rel="noopener">Wikipedia ↗</a>`:""}
+      ${D.o&&D.o[i]?`<a href="https://orcid.org/${esc(D.o[i])}" target="_blank" rel="noopener" title="ORCID ${esc(D.o[i])}">ORCID ↗</a>`:""}
       ${D.l[i]?`<a href="${esc(D.l[i])}" target="_blank" rel="noopener">źródło ↗</a>`:""}
     </div>
     <div class="meta">${reach?`<span class="chip old">linia sięga ${earliest[i]} r.</span>`:""}
