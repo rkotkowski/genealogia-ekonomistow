@@ -35,6 +35,6 @@ Zakładka „Zgłoś uzupełnienie” na stronie albo e-mail: kotkowski@inepan.w
 
 ## Licencja
 
-Dane (`data.json`, `uprawnienia.json`) zebrał autor ze źródeł publicznych; udostępnione na licencji [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/deed.pl). Przy wykorzystaniu prosimy o cytowanie artykułu w „Ekonomiście” i podanie adresu tej strony. Kod strony i skryptów: licencja MIT. Szczegóły w pliku `LICENSE`.
+Dane (`data.json`, `uprawnienia.json`) zebrał autor ze źródeł publicznych; udostępnione na licencji [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/deed.pl). Przy wykorzystaniu prosimy o wskazanie autora i podanie adresu tej strony. Kod strony i skryptów: licencja MIT. Szczegóły w pliku `LICENSE`.
 
 Administrator danych osobowych: dr Radosław Kotkowski, kotkowski@inepan.waw.pl.
