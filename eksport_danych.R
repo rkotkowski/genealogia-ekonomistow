@@ -29,6 +29,8 @@ out <- list(
   w = nz(d$wiki_doktoranta),
   l = link,
   hy = yr(d$habilitacja_rok),
+  rv = gsub("^\\|+|\\|+$", "", gsub("\\|+", "|", paste(nz(slug(d$recenzent1_id)), nz(slug(d$recenzent2_id)), nz(slug(d$recenzent3_id)), sep = "|"))),
+  pr = suppressWarnings(as.integer(substr(d$profesor_rok, 1, 4))),
   o = ifelse(!is.na(d$ORCID) & grepl("^[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{3}[0-9X]$", d$ORCID), d$ORCID, "")
 )
 write_json(out, "data.json", auto_unbox = TRUE, na = "null")

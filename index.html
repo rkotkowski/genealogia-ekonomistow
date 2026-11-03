@@ -198,6 +198,8 @@ catch(e){ $("#view").innerHTML='<p class="loading">Nie udało się wczytać dany
 // ---------- dane i pochodne ----------
 const N=D.id.length, idx=new Map(D.id.map((s,i)=>[s,i]));
 const P=D.p.map(s=>s?idx.get(s)??-1:-1), Q=D.q.map(s=>s?idx.get(s)??-1:-1);
+const RV=(D.rv||[]).map(s=>s?s.split("|").map(x=>idx.get(x)??-1).filter(x=>x>=0):[]);  // recenzenci doktoratu
+const reviewed=Array.from({length:N},()=>[]); RV.forEach((rs,i)=>rs.forEach(x=>reviewed[x].push(i)));
 const kids=Array.from({length:N},()=>[]), kids2=Array.from({length:N},()=>[]);
 P.forEach((p,i)=>{ if(p>=0&&p!==i) kids[p].push(i); });
 Q.forEach((p,i)=>{ if(p>=0&&p!==i) kids2[p].push(i); });
@@ -267,7 +269,9 @@ function personView(i){
       <span>doktorat <b class="mono">${D.y[i]??"rok nieznany"}</b></span>
       <span><b>${esc(uniName(i)||"uczelnia nieustalona")}</b>${D.h[i]?` (wówczas: ${esc(D.h[i])})`:""}</span>
       ${D.hy[i]?`<span>habilitacja <b class="mono">${D.hy[i]}</b></span>`:""}
+      ${D.pr&&D.pr[i]?`<span>tytuł profesora <b class="mono">${D.pr[i]}</b></span>`:""}
       ${promP2>=0?`<span>promotor pomocniczy lub drugi: ${link(promP2)}</span>`:""}
+      ${RV[i]&&RV[i].length?`<span>recenzenci: ${RV[i].map(link).join(", ")}</span>`:""}
       ${D.w[i]?`<a href="${esc(D.w[i])}" target="_blank" rel="noopener">Wikipedia ↗</a>`:""}
       ${D.o&&D.o[i]?`<a href="https://orcid.org/${esc(D.o[i])}" target="_blank" rel="noopener" title="ORCID ${esc(D.o[i])}">ORCID ↗</a>`:""}
       ${D.l[i]?`<a href="${esc(D.l[i])}" target="_blank" rel="noopener">źródło ↗</a>`:""}
@@ -284,6 +288,7 @@ function personView(i){
     <section class="panel"><h2>Wypromowani doktorzy</h2>
       ${kids[i].length?treeHTML(kids[i])+`<p class="note">Przycisk + rozwija kolejne pokolenie. „pot.” = wszyscy potomkowie w rejestrze.</p>`:`<p class="muted">Brak wypromowanych doktorów w rejestrze.</p>`}
       ${second.length?`<h3 style="margin-top:8px">Jako promotor pomocniczy lub drugi (${second.length})</h3>${treeHTML(second)}`:""}
+      ${reviewed[i].length?`<h3 style="margin-top:8px">Recenzje rozpraw doktorskich (${reviewed[i].length})</h3><ul class="tree">${reviewed[i].slice().sort(byYear).map(j=>`<li><div class="node"><span class="tog" aria-hidden="true"></span><span class="yr">${D.y[j]??"—"}</span><span class="nm">${link(j)}<small>${esc(short(j))}</small></span><span class="cnt"></span></div></li>`).join("")}</ul>`:""}
     </section>
   </div></div>`;
 }
