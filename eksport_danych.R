@@ -2,7 +2,7 @@
 # Użycie: Rscript eksport_danych.R [plik_rejestru.xlsx]
 suppressMessages({library(readxl); library(jsonlite)})
 args <- commandArgs(TRUE)
-f <- if (length(args)) args[1] else "../genealogia_akademicka_ekonomistów_polskich_20261102.xlsx"
+f <- if (length(args)) args[1] else "../genealogia_akademicka_ekonomistów_polskich_20261104.xlsx"
 d <- read_excel(f, sheet = "KSIĘGA GŁÓWNA", guess_max = 20000, col_types = "text")
 d <- d[!is.na(d$doktorant_id_double) & d$doktorant_id_double != "0", ]
 stopifnot(!anyDuplicated(d$doktorant_id_double))
