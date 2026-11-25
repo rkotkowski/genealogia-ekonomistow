@@ -542,7 +542,7 @@ function rodoView(){ return `<div class="prose">
   <h3>Prawa osób, których dane dotyczą</h3>
   <p>Prawo dostępu (art. 15), sprostowania (art. 16), ograniczenia przetwarzania (art. 18) i sprzeciwu (art. 21; przy badaniach naukowych art. 21 ust. 6). Prawo do usunięcia danych (art. 17) jest ograniczone, gdy usunięcie uniemożliwiłoby lub poważnie utrudniło realizację celów badania (art. 17 ust. 3 lit. d). Przysługuje też skarga do Prezesa Urzędu Ochrony Danych Osobowych (ul. Stawki 2, 00-193 Warszawa). Prośby najlepiej kierować e-mailem na adres <a href="mailto:${esc(KONTAKT)}">${esc(KONTAKT)}</a> lub przez <a href="#zglos">formularz</a> (rodzaj: „Sprzeciw lub prośba dotycząca moich danych”).</p>
   <h3>Odbiorcy i przechowywanie</h3>
-  <p>Rejestr jest publicznie dostępny na tej stronie i do pobrania jako plik danych. Strona jest hostowana w serwisie GitHub Pages (GitHub, Inc.), który przy każdym wejściu rejestruje w logach serwera adres IP odwiedzającego, zgodnie z własną polityką prywatności. Sama strona nie używa plików cookie, analityki ani zewnętrznych czcionek i skryptów: wszystko wczytuje się z tego samego serwera. Rejestr jest przechowywany bezterminowo jako zbiór o charakterze historycznym, co RODO dopuszcza przy badaniach naukowych i historycznych (art. 5 ust. 1 lit. e).</p>
+  <p>Rejestr jest publicznie dostępny na tej stronie i do pobrania jako plik danych. Strona jest hostowana w serwisie GitHub Pages (GitHub, Inc.), który przy każdym wejściu rejestruje w logach serwera adres IP odwiedzającego, zgodnie z własną polityką prywatności. Sama strona nie używa plików cookie ani zewnętrznych czcionek. Do liczenia odwiedzin używa usługi Cloudflare Web Analytics (Cloudflare, Inc.), która nie zapisuje plików cookie i nie śledzi poszczególnych odwiedzających; poza jej skryptem wszystko wczytuje się z tego samego serwera. Rejestr jest przechowywany bezterminowo jako zbiór o charakterze historycznym, co RODO dopuszcza przy badaniach naukowych i historycznych (art. 5 ust. 1 lit. e).</p>
   <h3>Zgłoszenia</h3>
   <p>Formularz niczego nie zapisuje na stronie: przygotowuje wiadomość e-mail, którą wysyłasz ze swojej skrzynki do administratora. Administrator przechowuje ją w poczcie tak długo, jak to potrzebne do sprawdzenia i wprowadzenia poprawki. Podstawa: art. 6 ust. 1 lit. f RODO (obsługa zgłoszeń i poprawianie rejestru).</p>
   <h3>Licencja</h3>
@@ -566,5 +566,6 @@ function route(){ const h=decodeURIComponent(location.hash.slice(1));
 addEventListener("hashchange",route); route();
 })();
 </script>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "d5fca0829d344fc598ef2f46169361fd"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
 </html>
