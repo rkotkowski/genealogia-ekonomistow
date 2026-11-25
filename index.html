@@ -173,6 +173,7 @@ footer{border-top:1px solid var(--rule);padding-top:14px;font-size:.8rem;color:v
       <a href="#graf" data-t="graf">Graf</a>
       <a href="#uprawnienia" data-t="uprawnienia">Uprawnienia i pokrycie</a>
       <a href="#zglos" data-t="zglos">Zgłoś uzupełnienie</a>
+      <a href="#cytowanie" data-t="cytowanie">Jak cytować</a>
       <a href="#dane-osobowe" data-t="dane-osobowe">Dane osobowe</a>
     </nav>
     <div class="search">
@@ -222,7 +223,7 @@ let oldest=0; for(let i=0;i<N;i++) if(D.y[i]&&(!D.y[oldest]||D.y[i]<D.y[oldest])
 const unisUsed=new Set(D.u.filter(u=>D.uczelnie[u])).size;
 $("#facts").innerHTML=`<span><b>${fmt(N)}</b> osób</span><span><b>${fmt(withP)}</b> relacji promotorskich</span>
   <span><b>${unisUsed}</b> uczelni i instytutów</span><span>najstarszy doktorat: <b>${D.y[oldest]}</b> (<a href="#${D.id[oldest]}">${esc(D.n[oldest])}</a>)</span>`;
-$("#foot").innerHTML=`Źródło: <span class="mono">${esc(D.zrodlo)}</span>, eksport z ${esc(D.wygenerowano)}. Relacje według promotora głównego; promotorzy pomocniczy i drudzy promotorzy wymienieni osobno. Rok = rok nadania stopnia. Dane: CC BY 4.0, autor: Radosław Kotkowski. <a href="#dane-osobowe">Informacja o danych osobowych</a>.`;
+$("#foot").innerHTML=`Źródło: <span class="mono">${esc(D.zrodlo)}</span>, eksport z ${esc(D.wygenerowano)}. Relacje według promotora głównego; promotorzy pomocniczy i drudzy promotorzy wymienieni osobno. Rok = rok nadania stopnia. Dane: CC BY 4.0, autor: Radosław Kotkowski. <a href="#cytowanie">Jak cytować</a> · <a href="#dane-osobowe">Informacja o danych osobowych</a>.`;
 
 // ---------- wyszukiwarka ----------
 const keys=D.n.map(n=>norm(n)); let hits=[], sel=0;
@@ -511,6 +512,26 @@ function setupForm(){
     finally{ $("#zb").disabled=false; } });
 }
 
+// ---------- widok: jak cytować ----------
+function citeView(){ return `<div class="prose">
+  <div class="eyebrow">Cytowanie</div>
+  <h2>Jak cytować</h2>
+  <p>Rejestr i sposób jego zbierania opisuje artykuł:</p>
+  <p>Kotkowski, R. (2026). Genealogia akademicka ekonomistów polskich: przyczynek do badań na przykładzie Uniwersytetu Mikołaja Kopernika w Toruniu. <i>Ekonomista</i>, 1–22. <a href="https://doi.org/10.52335/ekon/240562" target="_blank" rel="noopener">https://doi.org/10.52335/ekon/240562</a></p>
+  <p>Korzystając z danych rejestru, zacytuj ten artykuł i podaj adres strony oraz datę dostępu. Rejestr jest stale uzupełniany; obecny stan: ${esc(D.wygenerowano)}.</p>
+  <h3>BibTeX</h3>
+  <pre class="mono" style="white-space:pre-wrap;font-size:.82rem;background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:10px 12px">@article{kotkowski2026genealogia,
+  author  = {Kotkowski, Radosław},
+  title   = {Genealogia akademicka ekonomistów polskich: przyczynek do badań na przykładzie {U}niwersytetu {M}ikołaja {K}opernika w {T}oruniu},
+  journal = {Ekonomista},
+  year    = {2026},
+  pages   = {1--22},
+  doi     = {10.52335/ekon/240562}
+}</pre>
+  <h3>Daj znać, jak korzystasz z rejestru</h3>
+  <p>Jeśli używasz rejestru w badaniach, dydaktyce lub publikacji, napisz na adres <a href="mailto:${esc(KONTAKT)}">${esc(KONTAKT)}</a>. Błędy i braki najlepiej zgłaszać przez <a href="#zglos">formularz</a>.</p>
+  </div>`; }
+
 // ---------- widok: dane osobowe ----------
 function rodoView(){ return `<div class="prose">
   <div class="eyebrow">Informacja o przetwarzaniu danych osobowych</div>
@@ -558,6 +579,7 @@ function route(){ const h=decodeURIComponent(location.hash.slice(1));
   else if(h==="graf"||h.startsWith("graf-")){ out=graphView(h.slice(5)); tab="graf"; }
   else if(h==="uprawnienia"){ out=uprawnieniaView(); tab="uprawnienia"; }
   else if(h==="zglos"||h.startsWith("zglos-")){ out=zglosView(h.slice(6)); tab="zglos"; }
+  else if(h==="cytowanie"){ out=citeView(); tab="cytowanie"; }
   else if(h==="dane-osobowe"){ out=rodoView(); tab="dane-osobowe"; }
   else if(idx.has(h)) out=personView(idx.get(h));
   else out=homeView();
