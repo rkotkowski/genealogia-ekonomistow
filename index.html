@@ -223,7 +223,8 @@ let oldest=0; for(let i=0;i<N;i++) if(D.y[i]&&(!D.y[oldest]||D.y[i]<D.y[oldest])
 const unisUsed=new Set(D.u.filter(u=>D.uczelnie[u])).size;
 $("#facts").innerHTML=`<span><b>${fmt(N)}</b> osób</span><span><b>${fmt(withP)}</b> relacji promotorskich</span>
   <span><b>${unisUsed}</b> uczelni i instytutów</span><span>najstarszy doktorat: <b>${D.y[oldest]}</b> (<a href="#${D.id[oldest]}">${esc(D.n[oldest])}</a>)</span>`;
-$("#foot").innerHTML=`Źródło: <span class="mono">${esc(D.zrodlo)}</span>, eksport z ${esc(D.wygenerowano)}. Relacje według promotora głównego; promotorzy pomocniczy i drudzy promotorzy wymienieni osobno. Rok = rok nadania stopnia. Dane: CC BY 4.0, autor: Radosław Kotkowski. <a href="#cytowanie">Jak cytować</a> · <a href="#dane-osobowe">Informacja o danych osobowych</a>.`;
+const dataPL=s=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s||"");if(!m)return s||"";const mies=["stycznia","lutego","marca","kwietnia","maja","czerwca","lipca","sierpnia","września","października","listopada","grudnia"];return `${+m[3]} ${mies[+m[2]-1]} ${m[1]}`;};
+$("#foot").innerHTML=`Dane: CC BY 4.0, autor: Radosław Kotkowski. <a href="#cytowanie">Jak cytować</a> · <a href="#dane-osobowe">Informacja o danych osobowych</a>. Ostatnia aktualizacja: ${esc(dataPL(D.wygenerowano))}.`;
 
 // ---------- wyszukiwarka ----------
 const keys=D.n.map(n=>norm(n)); let hits=[], sel=0;
